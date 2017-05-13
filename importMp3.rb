@@ -1,40 +1,45 @@
 #!/usr/bin/env ruby
 require 'taglib'
-require 'stretcher'
+require 'elasticsearch'
 
-
-
-def print_file_information(fileName)
+def save_file_information(fileName, client, i)
   #puts "Got #{x}"
   TagLib::FileRef.open(fileName) do |fileref|
    unless fileref.null?
-    tag = fileref.tag
-    puts(tag.title)   #=> "Wake Up"
-    puts(tag.artist)  #=> "Arcade Fire"
-    puts(tag.album)   #=> "Funeral"
-    puts(tag.year)    #=> 2004
-    puts(tag.track)   #=> 7
-    puts(tag.genre)   #=> "Indie Rock"
 
+    tag = fileref.tag
+    # puts(tag.title)   #=> "Wake Up"
+    # puts(tag.artist)  #=> "Arcade Fire"
+    # puts(tag.album)   #=> "Funeral"
+    # puts(tag.year)    #=> 2004
+    # puts(tag.track)   #=> 7
+    # puts(tag.genre)   #=> "Indie Rock"
     properties = fileref.audio_properties
-    puts(properties.length)  #=> 335 (song length in seconds)
+
+    client.index  index: 'tracks', type: 'track', id: i, body: { title: tag.title, artist:tag.artist, album:tag.album,
+       year: tag.year, trackNumber: tag.track, genre: tag.genre, length:properties.length }
    end
   end
  end
 
+client = Elasticsearch::Client.new log: true
+
+ #client.transport.reload_connections!
+
+client.cluster.health
+
+client.index  index: 'tracks', type: 'track', id: "test", body: { title: "test" }
+
+
+
+
 d = Dir.glob("/home/ckram/Documents/Musique/**/*.mp3")
+i=0
 
-d.each  do |fileName|
-  print_file_information(fileName)
-end  # File is auto
+ d.each  do |fileName|
+  save_file_information(fileName,client,i)
 
-# Connect to elasticsearch
-es = Stretcher::Server.new('http://localhost:9200')
+  i = i + 1
+ end
 
-# Delete the tracks index if it exists
-es.index(:tracks).delete if es.index(:tracks).exists?
-
-# Bulk index the tweet documents
-es.index(:tracks).bulk_index [].tap { |docs|
-  puts(es)
-}
+client.search q: '*'
