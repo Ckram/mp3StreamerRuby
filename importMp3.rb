@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
 require 'taglib'
+require 'stretcher'
+
+
 
 def print_file_information(fileName)
   #puts "Got #{x}"
@@ -24,3 +27,14 @@ d = Dir.glob("/home/ckram/Documents/Musique/**/*.mp3")
 d.each  do |fileName|
   print_file_information(fileName)
 end  # File is auto
+
+# Connect to elasticsearch
+es = Stretcher::Server.new('http://localhost:9200')
+
+# Delete the tracks index if it exists
+es.index(:tracks).delete if es.index(:tracks).exists?
+
+# Bulk index the tweet documents
+es.index(:tracks).bulk_index [].tap { |docs|
+  puts(es)
+}
