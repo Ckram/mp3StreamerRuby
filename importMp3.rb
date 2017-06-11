@@ -31,9 +31,9 @@ client.cluster.health
 client.index  index: 'tracks', type: 'track', id: "test", body: { title: "test" }
 
 
+pathToMp3 = ARGV[0];
 
-
-d = Dir.glob("/home/ckram/Documents/Musique/**/*.mp3")
+d = Dir.glob(pathToMp3 + "/**/*.mp3")
 i=0
 
  d.each  do |fileName|
